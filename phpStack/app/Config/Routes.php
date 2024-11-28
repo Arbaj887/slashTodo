@@ -6,12 +6,12 @@ use CodeIgniter\Router\RouteCollection;
  * @var RouteCollection $routes
  */
 $routes->get('/', 'Home::index');
-$routes->match(['get','post'],'/signup', 'Home::signup');
-$routes->match(['get','post'],'/login', 'Home::login');
-$routes->match(['get','post'], '/dashboard', 'Home::dashboard');
-$routes->match(['get','post'], '/logout', 'Home::logout');
-$routes->match(['get','post'], '/updateUser', 'Home::updateUser');
-$routes->match(['get','post'], '/deleteuser(:any)', 'Home::deleteuser/$1');
-$routes->match(['get','post'], '/uploadFile', 'Home::uploadFile');
+$routes->match(['GET','POST'],'/signup', 'Home::signup');
+$routes->match(['GET','POST'],'/login', 'Home::login');
+$routes->match(['GET','POST'], '/dashboard', 'Home::dashboard');
+$routes->match(['GET','POST'], '/logout', 'Home::logout');
+$routes->match(['GET','POST'], '/updateUser', 'Home::updateUser');
+$routes->match(['GET','POST'], '/deleteuser(:any)', 'Home::deleteuser/$1');
+$routes->match(['GET','POST'], '/uploadFile', 'Home::uploadFile');
 
 
