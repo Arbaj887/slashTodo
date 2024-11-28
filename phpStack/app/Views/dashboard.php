@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -9,7 +10,8 @@
     <title>DashBoard</title>
 </head>
 
-<body class="">
+<body>
+
     <div class="sm:h-screen w-full flex justify-center items-center bg-slate-200  min-w-[720px] ">
         <div class="w-full h-[90%] sm:w-[90%] shadow-lg rounded-lg bg-white m-7 p-7 overflow-y-scroll text-center">
             <!-----------------------------------------Header--Section---------------------------------------------  -->
@@ -21,8 +23,25 @@
                         id="search"
                         onkeyup="searchUser()" />
                 </div>
-                <!-- ----------------------------------Logout--and--Download---------------------------------- -->
+                <!-- ----------------------------------upload--Logout--and--Download---------------------------------- -->
                 <div class="flex flex-row justify-between items-center m-5 flex-wrap">
+                    <div>
+                        <!-- ----------------------------Making--form--to-upload --file---------------------------- -->
+                        <form action="<?= base_url("/uploadFile") ?>" method="post" enctype="multipart/form-data">
+                         <input type="file" id="selectFile" name="selectFile" accept=".csv" /> 
+                    <!-- ADD HIDDEN HERE as attribute -->
+                    <!-- <label for="uploadFile" id="selectFile" class="cursor-pointer bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+                    onclick="showUploadFile()">select File</label> -->
+                    <button type="submit"  id="UploadFile" name="UploadFile" 
+                    class="cursor-pointer bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ">
+                <!-- add this here on label onclick="uploadFile()" -->
+                    <!-- ADD HIDDEN HERE in class-->
+                    Upload File
+                </label>
+                    </form>
+                    
+                    </div>
+
                     <a href="<?php echo base_url('/logout'); ?>" class="bg-green-400 text-white hover:bg-red-600 text-xl px-4 p-2 m-4 rounded-lg">Logout</a>
                     <button onclick="downloadData()">
 
@@ -93,7 +112,6 @@
                     <div class="flex flex-row border-r-3 text-black px-5 py-3 rounded-lg overflow-auto m-5">
                         Page <?php echo $currentPage; ?> of <?php echo $totalPages; ?>
                     </div>
-
                     <!-- Next Button -->
                     <?php if ($currentPage < $totalPages): ?>
                         <a href="?page=<?php echo $currentPage + 1; ?>" class="bg-blue-500 border-r-3 text-white px-5 py-2 rounded-lg">Next</a>
@@ -161,6 +179,15 @@
         </div>
     </div>
 
+    <!-- ---------------------------------------------Pop-Message---------------------------------------------- -->
+    <?php if(session()->getFlashdata('popMessage') !== NULL){
+    $filePath =__DIR__ . '/../Views/popMessage.php';
+    if (file_exists($filePath)) {
+        include_once($filePath);
+    } else {
+        echo "File not found: $filePath";
+    }
+} ?>
     <!-- -----------------------------------Script-------------------------------------------------------------------------- -->
     <script>
         function openEdit(id, name, email, mongoId) {
@@ -186,63 +213,146 @@
             let users = document.getElementById("userTable");
             let usersList = users.getElementsByTagName("tr");
 
-            for (let i = 1; i < usersList.length; i++) { 
+            for (let i = 1; i < usersList.length; i++) {
                 let cells = usersList[i].getElementsByTagName("td");
-                if (cells.length > 0) { 
-                    let name = cells[2].textContent.toLowerCase(); 
-                    let email = cells[3].textContent.toLowerCase(); 
+                if (cells.length > 0) {
+                    let name = cells[2].textContent.toLowerCase();
+                    let email = cells[3].textContent.toLowerCase();
 
                     if (name.includes(search) || email.includes(search)) {
-                        usersList[i].style.display = ""; 
+                        usersList[i].style.display = "";
                     } else {
-                        usersList[i].style.display = "none"; 
-                        
+                        usersList[i].style.display = "none";
+
                     }
                 }
             }
         }
 
+
         function downloadData() {
-            let data = document.getElementById("userTable");
             let csvContent = "data:text/csv;charset=utf-8,";
-            let rows = data.getElementsByTagName("tr");
+            const token = "<?php echo $_SESSION["token"]; ?>";
 
-
-            for (let i = 0; i < rows.length; i++) {
-                let row = rows[i];
-                let id = row.cells[0].textContent;
-                let name = row.cells[1].textContent;
-                let email = row.cells[2].textContent;
-                let mongoId = row.cells[3].textContent;
-
-                // Fetch additional data if necessary
-                let url = `/api/users/${mongoId}`;
-                fetch(url)
-                    .then(response => response.json())
-                    .then(userData => {
-                        // Assuming userData contains the data you want to add to the CSV
-                        let additionalData = userData.additionalField; // Adjust as necessary
-                        let csvRow = [id, name, email, mongoId, additionalData].join(","); // Create CSV row
-                        csvContent += csvRow + "\n"; // Append row to CSV content
-
-                        // Check if this is the last row to trigger download
-                        if (i === rows.length - 1) {
-                            downloadCSV(csvContent);
-                        }
+            fetch("http://localhost:8000/dashboard", {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    }
+                })
+                .then(data =>
+                    data.json()
+                )
+                .then(data =>{
+                    let rows = ['name','email'].join(",");
+                    
+                        csvContent += rows + "\n";
+                        
+                   
+                    data.map((items,i)=>{
+                       csvContent +=  items.name + "," + items.email  + "\n";
+                       
                     })
-                    .catch(error => console.error('Error fetching user data:', error));
-            }
+                    //console.log(csvContent);
+                    csvContent = csvContent.slice(0, -1);
+                    const encodedUri = encodeURI(csvContent);
+                    const link = document.createElement("a");
+                    link.setAttribute("href", encodedUri);
+                    link.setAttribute("download", "users.csv");
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                 }
+                )
+
         }
 
-        function downloadCSV(csvContent) {
-            let encodedUri = encodeURI(csvContent);
-            let link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", "data.csv");
-            document.body.appendChild(link); // Required for Firefox
-            link.click(); // Trigger the download
-            document.body.removeChild(link); // Clean up
-        }
+        // async function showUploadFile(){
+        // //    console.log( document.getElementById("uploadFile").files);
+        //     if(document.getElementById("uploadFile").files.length>0){
+        //         document.getElementById("selectFile").classList.add("hidden");
+        //     document.getElementById("showUploadFile").classList.remove("hidden");
+            
+        //     }
+        //     else{
+        //         document.getElementById("selectFile").classList.remove("hidden");
+        //         document.getElementById("showUploadFile").classList.add("hidden");
+        //     }
+        //  }
+
+
+
+        // function uploadFile(){
+        //     const file=document.getElementById("uploadFile").files[0];
+        //     console.log(file)
+        //     try{
+        //         const reader = new FileReader();
+        //         reader.onload = function(e) {
+        //             const csvContent = e.target.result;
+        //             const rows = csvContent.split("\n");
+        //             const csvData = rows.map(row => {
+        //                 const csvColumn = row.split(",");
+        //                 return {
+        //                     _id: csvColumn[0],
+        //                     name: csvColumn[1],
+        //                     email: csvColumn[2],
+        //                     };
+        //                     });
+                          
+
+        //     }
+        // }catch(err){
+
+        //         console.log(err);
+                
+                   
+        //     }
+
+        // }
+    
+        // function downloadData() {
+        //     let data = document.getElementById("userTable");
+        //     let csvContent = "data:text/csv;charset=utf-8,";
+        //     let rows = data.getElementsByTagName("tr");
+
+
+        //     for (let i = 0; i < rows.length; i++) {
+        //         let row = rows[i];
+        //         let id = row.cells[0].textContent;
+        //         let name = row.cells[1].textContent;
+        //         let email = row.cells[2].textContent;
+        //         let mongoId = row.cells[3].textContent;
+
+        //         // Fetch additional data if necessary
+        //         let url = `/api/users/${mongoId}`;
+        //         fetch(url)
+        //             .then(response => response.json())
+        //             .then(userData => {
+        //                 // Assuming userData contains the data you want to add to the CSV
+        //                 let additionalData = userData.additionalField; // Adjust as necessary
+        //                 let csvRow = [id, name, email, mongoId, additionalData].join(","); // Create CSV row
+        //                 csvContent += csvRow + "\n"; // Append row to CSV content
+
+        //                 // Check if this is the last row to trigger download
+        //                 if (i === rows.length - 1) {
+        //                     downloadCSV(csvContent);
+        //                 }
+        //             })
+        //             .catch(error => console.error('Error fetching user data:', error));
+        //     }
+        // }
+
+        // function downloadCSV(csvContent) {
+        //     let encodedUri = encodeURI(csvContent);
+        //     let link = document.createElement("a");
+        //     link.setAttribute("href", encodedUri);
+        //     link.setAttribute("download", "data.csv");
+        //     document.body.appendChild(link); // Required for Firefox
+        //     link.click(); // Trigger the download
+        //     document.body.removeChild(link); // Clean up
+        // }
     </script>
 </body>
 

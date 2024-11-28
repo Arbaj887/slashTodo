@@ -8,6 +8,7 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center h-screen">
 
+       
     <!-- Login Form Container -->
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h1 class="text-3xl font-semibold text-center text-gray-800 mb-6">Login</h1>
@@ -40,6 +41,15 @@
         <!-- Form End -->
     </div>
     <!-- Login Form Container End -->
+     <!-- ---------------------------------------------Pop-Message---------------------------------------------- -->
+    <?php if(session()->getFlashdata('popMessage') !== NULL){
+    $filePath =__DIR__ . '/../Views/popMessage.php';
+    if (file_exists($filePath)) {
+        include_once($filePath);
+    } else {
+        echo "File not found: $filePath";
+    }
+} ?>
 
 </body>
 </html>

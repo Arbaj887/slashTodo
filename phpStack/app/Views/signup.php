@@ -47,5 +47,14 @@
     </div>
     <!-- Signup Form Container End -->
 
+     <!-- ---------------------------------------------Pop-Message---------------------------------------------- -->
+     <?php if(session()->getFlashdata('popMessage') !== NULL){
+    $filePath =__DIR__ . '/../Views/popMessage.php';
+    if (file_exists($filePath)) {
+        include_once($filePath);
+    } else {
+        echo "File not found: $filePath";
+    }
+} ?>
 </body>
 </html>

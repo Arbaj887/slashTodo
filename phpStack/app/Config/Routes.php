@@ -12,5 +12,6 @@ $routes->match(['get','post'], '/dashboard', 'Home::dashboard');
 $routes->match(['get','post'], '/logout', 'Home::logout');
 $routes->match(['get','post'], '/updateUser', 'Home::updateUser');
 $routes->match(['get','post'], '/deleteuser(:any)', 'Home::deleteuser/$1');
+$routes->match(['get','post'], '/uploadFile', 'Home::uploadFile');
 
 
