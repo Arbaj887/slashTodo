@@ -14,19 +14,24 @@ class UserDetails extends Migration
                 'constraint' => 5,
                 'unsigned' => true,
                 'auto_increment' => true,
+                
             ],
             'name' => [
                 'type' => 'VARCHAR',
                 'constraint' => 255,
+                'null' => false,
             ],
             'email' => [
                 'type' => 'VARCHAR',
                 //'lowercase'=>true,
                 'constraint' => 255,
+                'unique' => true,
+                'null' => false,
             ],
             'password' => [
                 'type' => 'VARCHAR',
                 'constraint' => 255,
+                'null' => false,
             ],
             // 'uuid'=>[
             //     'type'=>'VARCHAR',

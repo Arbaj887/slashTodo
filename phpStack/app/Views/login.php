@@ -8,7 +8,7 @@
 </head>
 <body class="bg-gray-100 flex items-center justify-center h-screen">
 
-       
+
     <!-- Login Form Container -->
     <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
         <h1 class="text-3xl font-semibold text-center text-gray-800 mb-6">Login</h1>

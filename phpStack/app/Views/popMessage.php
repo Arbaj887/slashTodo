@@ -11,7 +11,7 @@
     <?php if(session()->getFlashdata('popMessage')): ?>
     <div class="absolute right-0 top-0  bg-white shadow-xl rounded-lg  m-5 min-w-[250px] animate-bounce " id="showError">
             <div class="w-full flex justify-end p-2  m-1 px-3 ">
-            <i class=" fa-regular fa-circle-xmark hover:text-red-700 pr-3" 
+            <i class=" cursor-pointer fa-regular fa-circle-xmark hover:text-red-700 pr-3" 
             
             onclick="hideMessage()"></i>
             </div>
