@@ -1,5 +1,5 @@
 const user = require('../models/userModel.js');
-const bycrpt = require('bcrypt');
+const bcrypt = require('bcrypt');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 
@@ -39,6 +39,7 @@ catch(err){
 const register=async(req,res)=>{
     try{
         const {name,email,password}=req.body;
+        console.log(req.body);
         
         const userExist=await user.findOne({email});
         if(userExist){
@@ -121,11 +122,36 @@ const deleteUser=async(req,res)=>{
             return res.status(500).json({message:'Internal server error'});
           }
 }
+//---------------------------------------------------Bulk-insertUser----------------------------------------
+const bulkRegister = async (req, res) => {
+    const { allData } = req.body;
+    
+
+    try {
+        
+        const hashedUsers = await Promise.all(allData.map(async (element) => {
+            const hashPassword = await bcrypt.hash(element.password, 10);
+            return { ...element, password: hashPassword }; 
+        }));
+
+        
+        const userCreate = await user.insertMany(hashedUsers);
+
+        return res.status(200).json({ message: "All users created successfully" });
+    } catch (err) {
+        console.error(err); 
+        return res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+
+
 
 module.exports={
     login,
     register,
     logout,
     dashboard,
-    editUser,deleteUser
+    editUser,deleteUser,
+    bulkRegister
 }

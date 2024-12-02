@@ -20,7 +20,7 @@ class Dashboard extends BaseController
         //$user = $user_model->paginate(4);
         $user = $user_model->findAll();
         $currentPage = $this->request->getVar('page') ?? 1; // Get the current page from the request
-        $perPage = 4;
+        $perPage = 5;
         $totalUsers = count($user); // Total number of users
         $totalPages = ceil($totalUsers / $perPage); // Total number of pages
         $offset = ($currentPage - 1) * $perPage;

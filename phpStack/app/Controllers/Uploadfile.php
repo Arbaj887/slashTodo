@@ -11,6 +11,8 @@ class Uploadfile extends BaseController
 {
     public function uploadfile()
     {
+        ini_set('max_execution_time', '300'); 
+        ini_set('max_execution_time', '0');
         // Check if the user is authenticated
         if (!$this->session->get('user') || !$this->session->get('token')) {
             return redirect()->to('/login')->with('popMessage', 'Unauthorized Access');
@@ -18,6 +20,8 @@ class Uploadfile extends BaseController
 
         // Check if the form was submitted
         if (isset($_POST['UploadFile'])) {
+            $allData=[];      //---------this will send to node js  //--every user data store here
+            $sendInNode=[];
             $file = $this->request->getFile('selectFile');
 
             // Validate the uploaded file
@@ -73,72 +77,69 @@ class Uploadfile extends BaseController
                 }
                 if (empty($data['name']) || empty($data['email'])  || empty($data['password'])) {
 
-                    // This will handle the case where any of the fields are empty or not set
-                    //  echo "<pre>";
-                    //  print_r($data['email'].''.''.$data['password']);
-                    //  echo "</pre>"; 
-                    //  die;
-                    $emptyEntry = WRITEPATH . 'uploads/invalid' . time() . '.csv';
-                    $file = fopen($emptyEntry, 'a');
+                    $emptyEntry = WRITEPATH . 'uploads/invalid' .time(). '.csv';
+                    $fileInvalid = fopen($emptyEntry, 'a');
 
-                    //  echo "<pre>";
-                    //  print_r(filesize($emptyEntry));
-                    //  echo "</pre>"; die;
-                    if (filesize($emptyEntry) === 0) {
-                        fputcsv($file, $header);
-                    } // Write the header to the CSV file
-                    fputcsv($file, $row);    // Write the row of data to the CSV file
-
-                    // Combine the header and the row into an associative array
-                    //$invalidField = array_combine($header, $row);
-
+                    $invalidField = array_combine($header, $row);
+                    fputcsv($fileInvalid, $invalidField);
                     // Optionally, you can log or process $invalidField here
 
-                    fclose($file); // Close the file after writing
+                    fclose($fileInvalid); // Close the file after writing
 
 
                     continue; // Skip to the next iteration of the loop
                 }
                 // Validate and hash the password
                 if (isset($data['password']) && !empty($data['password'])) {
-                    $password_notHash = $data['password'];
+                    //$password_notHash = $data['password'];
+                    array_push($sendInNode,$data);
+
                     $data['password'] = password_hash($data['password'], PASSWORD_BCRYPT);
+
+                    array_push($allData,$data);
+
                 } else {
                     fclose($fileHandle);
                     return redirect()->back()->with('popMessage', 'Password is required');
                 }
 
+                 //array_push($allData,$data);
+                 
+              
+            }
+            $result=$user_model->insertBatch($allData);
+            if ($result) {
+                // Upload to Node.js
+                try {
+                    $client = new Client();
+                    $res = $client->post('http://localhost:8000/bulkregister', [
+                        'json' => [
+                             "allData"=> $sendInNode,
+                        ]
+                        
+                            // 'name' => $data['name'],
+                            // 'email' => $data['email'],
+                            // 'password' => $password_notHash
+                        
+                    ]);
 
-                $result = $user_model->save($data);
-                if ($result) {
-                    // Upload to Node.js
-                    try {
-                        $client = new Client();
-                        $res = $client->post('http://localhost:8000/register', [
-                            'json' => [
-                                'name' => $data['name'],
-                                'email' => $data['email'],
-                                'password' => $password_notHash
-                            ]
-                        ]);
-
-                        if ($res->getStatusCode() !== 200) {
-                            fclose($fileHandle);
-                            return redirect()->back()->with('popMessage', 'Failed to upload on Node.js: ' . $res->getBody());
-                        }
-                    } catch (\Exception $e) {
+                    if ($res->getStatusCode() !== 200) {
                         fclose($fileHandle);
-                        return redirect()->back()->with('popMessage', 'Unable to upload file on Node.js: ' . $e->getMessage());
+                        return redirect()->back()->with('popMessage', 'Failed to upload on Node.js: ' . $res->getBody());
                     }
-                } else {
+                } catch (\Exception $e) {
                     fclose($fileHandle);
-                    return redirect()->back()->with('popMessage', 'Failed to upload on MySQL');
+                    return redirect()->back()->with('popMessage', 'Unable to upload file on Node.js: ' . $e->getMessage());
                 }
+            } else {
+                fclose($fileHandle);
+                return redirect()->back()->with('popMessage', 'Failed to upload on MySQL');
             }
 
             fclose($fileHandle);
-
-            // unlink($filePath); ///---remove file after data saved to database
+            
+            unlink($filePath); ///---remove file after data saved to database
+            
             return redirect()->back()->with('popMessage', 'File processed successfully');
         } else {
             return redirect()->back()->with('popMessage', 'Unable to Upload data');

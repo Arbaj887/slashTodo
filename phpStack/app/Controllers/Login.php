@@ -15,8 +15,8 @@ class Login extends BaseController
         if (isset($_POST['email'])) {
             $user_model = new UserModel();
 
-            $email = $this->request->getPost('email');
-            $password = $this->request->getPost('password');
+            $email = trim($this->request->getPost('email'));
+            $password = trim($this->request->getPost('password'));
             $user = $user_model->where('email', $email)->first();
             if (!$user) {
                 return redirect()->back()->with('popMessage', 'Please Enter correct email and password');
